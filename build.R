@@ -6,7 +6,6 @@
 # install.packages("stringr")
 
 
-
 # Data Cleaning
 
 # (a) semester_dummy_tidy
@@ -23,7 +22,6 @@ semester_data_1 <- read_semester_data("semester_data_1", skip_option = 1)
 semester_data_2 <- read_semester_data("semester_data_2", skip_option = 0)
 
 names(semester_data_2) <- names(semester_data_1)
-
 semester_dummy_tidy <- dplyr::bind_rows(semester_data_1, semester_data_2) |>
   dplyr::select(-Y)
 
@@ -70,6 +68,7 @@ gradrate_ready <- dplyr::mutate(gradrate_tidy, total_gradrate_4yr = tot4yrgrads/
   dplyr::mutate(man_gradrate_4yr = m_4yrgrads/m_cohortsize) |>
   round(digits = 3) |>
   na.omit()
+
 
 # (e) covariates_ready
 year_gradrate_ready <- tidyr::expand(gradrate_ready, year) |>

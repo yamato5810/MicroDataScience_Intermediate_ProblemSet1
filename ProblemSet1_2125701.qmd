@@ -1,0 +1,215 @@
+---
+title: "中級ミクロデータサイエンス Problem Set 1."
+format: pdf
+pdf-engine: lualatex
+documentclass: ltjsarticle 
+editor: visual
+---
+
+氏名： 五十嵐大和
+
+学籍番号：2125701
+
+## Preparation : Installing some packages
+
+用いるいくつかのpackageを必要に応じて、インストールする
+
+```{r, eval = FALSE}
+install.packages("tidyverse")
+install.packages("here")
+install.packages("openxlsx")
+install.packages("stringr")
+```
+
+# (a) semester_dummy_tidy
+
+1.  生データを読み込みなさい (`semester_dummy_1.csv`, `semester_dummy_2.csv`)
+2.  `semester_dummy_1.csv` については、1行目を列名としなさい
+3.  2つのデータを適切に結合しなさい
+4.  'Y'列を削除しなさい
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+# 1, 2について
+read_semester_data <- function(data_name, skip_option){
+  name <- paste0(data_name, ".csv")
+  path <- here::here("raw_data", "semester_dummy", name)
+  if(file.exists(path))
+    data <- readr::read_csv(path, skip = skip_option)
+  else
+    data <- readr::read_csv(name, skip = skip_option)
+  return(data)
+}
+semester_data_1 <- read_semester_data("semester_data_1", skip_option = 1)
+semester_data_2 <- read_semester_data("semester_data_2", skip_option = 0)
+
+# 3, 4について
+names(semester_data_2) <- names(semester_data_1)
+semester_dummy_tidy <- dplyr::bind_rows(semester_data_1, semester_data_2) |>
+  dplyr::select(-Y)
+```
+
+### 【コードの説明】
+
+(1, 2について) `read_semester_data` という関数を作って、データを読み込む。この際、`skip_option` を設けることで、一行目を列名にするか否かを選択できるようにする。（GitHub等でファイル構造を作った一つの場合と、特定のファイル構造がない場合のどちらもに対応できるように、ifで場合分けをした。）
+
+(3, 4について) names関数で、それぞれの列名をそろえたうえで、`dplyr::bind_rows`を用いて結合した。また、`dplyr::select`を用いて、'Y'列を削除した。
+
+# (b) gradrate_tidy
+
+1.  ⽣データを読み込み、適切に結合しなさい
+2.  ⼥⼦学⽣の4年卒業率に0.01をかけて、0から1のスケールに変更しなさい
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+read_gradrate_tidy <- function(data_name){
+  name <- paste0(data_name, " " ,".xlsx")
+  path <- here::here("raw_data", "outcome", name)
+  if(file.exists(path))
+    data <- openxlsx::read.xlsx(path) |>
+    dplyr::mutate_all(as.double)
+  else
+    data <- openxlsx::read.xlsx(name)|>
+    dplyr::mutate_all(as.double)
+  return(data)
+}
+years <- c(1991:1993, 1995:2016)
+gradrate_tidy <- purrr::map(years, read_gradrate_tidy)|>
+  dplyr::bind_rows() |>
+  dplyr::mutate(women_gradrate_4yr = 0.01*women_gradrate_4yr)
+```
+
+### 【コードの説明】
+
+(a)と同様に、`read_gradrate_tidy` という関数を作り、データを読み込む。生データに含まれる年度に関して 、`purrr::map` と `dplyr::bind_rows`を用いて結合した。また、`dplyr::mutate`を用いて、`women_gradrate_4yr`の列を0.01倍した。
+
+# (c) covariates_tidy
+
+1.  ⽣データを読み込みなさい (`covariates.xlsx`)
+2.  'university_id'という列名を'unitid'に変更しなさい
+3.  'unitid'に含まれる'aaaa'という⽂字を削除しなさい
+4.  'category'列に含まれる'instatetuition', 'costs', 'faculty', 'white_cohortsize'を別の列として追加しなさ い(wide型に変更しなさい)
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+read_covariates_tidy <- function(data_name) {
+  name <- paste0(data_name, ".xlsx")
+  path <- here::here("raw_data", "covariates", name)
+  if(file.exists(path))
+    data <- openxlsx::read.xlsx(path) 
+  else
+    data <- openxlsx::read.xlsx(name) 
+  return(data)
+}
+
+covariates_tidy <- read_covariates_tidy("covariates") |>
+  dplyr::rename(unitid = university_id) |>
+  dplyr::mutate(unitid = stringr::str_replace(unitid, "aaaa", "")) |>
+  tidyr::pivot_wider(names_from = "category",
+                     values_from = "value")
+```
+
+### 【コードの説明】
+
+(a), (b) と同様に、`read_covariates_tidy` という関数を作り、データを読み込む。`dplyr::rename`で列名の変更、`dplyr::mutate` と `stringr::str_replace`を用いて⽂字の削除、`tidyr::pivot_wider`を用いてwide型に変更した。
+
+# (d) gradrate_ready
+
+1.  男⼥合計の4年卒業率と男⼦学⽣の4年卒業率を計算し、新たな列として追加しなさい
+2.  計算した卒業率を有効数字3桁に調整しなさい
+3.  卒業率に⽋損値が含まれている⾏を削除しなさい
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+gradrate_ready <- dplyr::mutate(gradrate_tidy, total_gradrate_4yr = tot4yrgrads/totcohortsize) |>
+  dplyr::mutate(man_gradrate_4yr = m_4yrgrads/m_cohortsize) |>
+  round(digits = 3) |>
+  na.omit()
+```
+
+### 【コードの説明】
+
+`dplyr::mutate`を用いて、男女合計と男子学生それぞれの4年での卒業者数/学生数を計算した。また、`round`関数で四捨五入、`na.omit`で欠損値含む行を削除した。
+
+# (e) covariates_ready
+
+1.  'outcome'や'semester_dummy'に含まれる年を調べ、'covariates'データの期間を他のデータに揃えなさい
+2.  'outcome_data'に含まれる'unitid'を特定し、'covariates'に含まれる'unitid'を'outcome'データに揃えなさい
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+year_gradrate_ready <- tidyr::expand(gradrate_ready, year) |>
+  as.data.frame()
+year_semester_dummy_tidy <- tidyr::expand(semester_dummy_tidy, year) |>
+  as.data.frame()
+unitid_gradrate_ready <- tidyr::expand(gradrate_ready, unitid) |>
+  as.data.frame()
+
+covariates_ready <- dplyr::mutate(covariates_tidy, dplyr::across(everything(), as.double, na.rm = TRUE)) |>
+  dplyr::filter(year %in% year_gradrate_ready$year & year %in% year_semester_dummy_tidy$year) |>
+  dplyr::filter(unitid %in% unitid_gradrate_ready$unitid)
+```
+
+### 【コードの説明】
+
+`tidyr::expand`を用いて、異なる年を抽出する。`dplyr::filter`を用いて、`gradrate_ready`や`semester_dummy_tidy`に含まれる年や、`gradrate_ready`に含まれる'unitid'を特定し、整理した。
+
+# (f) master
+
+1.  結合に⽤いる変数を考え、`semester_dummy_tidy`, `covariates_ready`, `gradrate_ready`を適切に結合し なさい
+2.  ⽩⼈学⽣が学⽣全体に占める割合を計算し、有効数字3桁に調整した上で、新たな列として追加しなさい
+
+### 【コード】
+
+```{r, results = 'hide', message = FALSE, warning=FALSE}
+master <- dplyr::inner_join(semester_dummy_tidy, gradrate_ready, by = c("unitid", "year")) |>
+  dplyr::inner_join(covariates_ready, by = c("unitid", "year")) |>
+  dplyr::mutate(rate_for_white_student = white_cohortsize/totcohortsize)
+```
+
+### 【コードの説明】
+
+`dplyr::inner_join`を用いて、3つのデータを結合した。`dplyr::mutate`を用いて、白人学生数/全学生数の率を現した列を追加した。
+
+# （補足）それぞれのデータの中身の確認
+
+#### (a) semester_dummy_tidy
+
+```{r, echo=FALSE}
+head(semester_dummy_tidy)
+```
+
+#### (b) gradrate_tidy
+
+```{r, echo=FALSE}
+head(gradrate_tidy)
+```
+
+#### (c) covariates_tidy
+
+```{r, echo=FALSE}
+head(covariates_tidy)
+```
+
+#### (d) gradrate_ready
+
+```{r, echo=FALSE}
+head(gradrate_ready)
+```
+
+#### (e) covariates_ready
+
+```{r, echo=FALSE}
+head(covariates_ready)
+```
+
+#### (f) master
+
+```{r, echo=FALSE}
+head(master)
+```
