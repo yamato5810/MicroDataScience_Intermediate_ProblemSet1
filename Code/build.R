@@ -6,6 +6,7 @@
 # install.packages("stringr")
 
 
+
 # Data Cleaning
 
 # (a) semester_dummy_tidy
@@ -88,3 +89,7 @@ master <- dplyr::inner_join(semester_dummy_tidy, gradrate_ready, by = c("unitid"
   dplyr::inner_join(covariates_ready, by = c("unitid", "year")) |>
   dplyr::mutate(rate_for_white_student = white_cohortsize/totcohortsize)
    
+
+
+# creating output files
+write.csv(master, file = 'C:/mylib/MicroDataScience_Intermediate_ProblemSet1/Output/master.csv')
