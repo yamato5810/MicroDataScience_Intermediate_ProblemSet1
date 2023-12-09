@@ -12,7 +12,7 @@
 # (a) semester_dummy_tidy
 read_semester_data <- function(data_name, skip_option){
   name <- paste0(data_name, ".csv")
-  path <- here::here("raw_data", "semester_dummy", name)
+  path <- here::here("02_raw_data", "semester_dummy", name)
   if(file.exists(path))
     data <- readr::read_csv(path, skip = skip_option)
   else
@@ -30,7 +30,7 @@ semester_dummy_tidy <- dplyr::bind_rows(semester_data_1, semester_data_2) |>
 # (b) gradrate_tidy
 read_gradrate_tidy <- function(data_name){
   name <- paste0(data_name, " " ,".xlsx")
-  path <- here::here("raw_data", "outcome", name)
+  path <- here::here("02_raw_data", "outcome", name)
   if(file.exists(path))
     data <- openxlsx::read.xlsx(path) |>
     dplyr::mutate_all(as.double)
@@ -49,7 +49,7 @@ gradrate_tidy <- purrr::map(years, read_gradrate_tidy)|>
 # (c) covariates_tidy
 read_covariates_tidy <- function(data_name) {
   name <- paste0(data_name, ".xlsx")
-  path <- here::here("raw_data", "covariates", name)
+  path <- here::here("02_raw_data", "covariates", name)
   if(file.exists(path))
     data <- openxlsx::read.xlsx(path) 
   else
@@ -92,4 +92,4 @@ master <- dplyr::inner_join(semester_dummy_tidy, gradrate_ready, by = c("unitid"
 
 
 # creating output files
-write.csv(master, file = 'C:/mylib/MicroDataScience_Intermediate_ProblemSet1/Output/master.csv')
+write.csv(master, file = here::here("04_Output", "master.csv"))
