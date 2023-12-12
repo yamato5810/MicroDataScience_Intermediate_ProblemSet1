@@ -10,6 +10,8 @@ editor: visual
 
 学籍番号：2125701
 
+GitHub URL : https://github.com/yamato5810/MicroDataScience_Intermediate_ProblemSet1
+
 ## Preparation : Installing some packages
 
 用いるいくつかのpackageを必要に応じて、インストールする
@@ -34,7 +36,7 @@ install.packages("stringr")
 # 1, 2について
 read_semester_data <- function(data_name, skip_option){
   name <- paste0(data_name, ".csv")
-  path <- here::here("raw_data", "semester_dummy", name)
+  path <- here::here("02_raw_data", "semester_dummy", name)
   if(file.exists(path))
     data <- readr::read_csv(path, skip = skip_option)
   else
@@ -66,7 +68,7 @@ semester_dummy_tidy <- dplyr::bind_rows(semester_data_1, semester_data_2) |>
 ```{r, results = 'hide', message = FALSE, warning=FALSE}
 read_gradrate_tidy <- function(data_name){
   name <- paste0(data_name, " " ,".xlsx")
-  path <- here::here("raw_data", "outcome", name)
+  path <- here::here("02_raw_data", "outcome", name)
   if(file.exists(path))
     data <- openxlsx::read.xlsx(path) |>
     dplyr::mutate_all(as.double)
@@ -97,7 +99,7 @@ gradrate_tidy <- purrr::map(years, read_gradrate_tidy)|>
 ```{r, results = 'hide', message = FALSE, warning=FALSE}
 read_covariates_tidy <- function(data_name) {
   name <- paste0(data_name, ".xlsx")
-  path <- here::here("raw_data", "covariates", name)
+  path <- here::here("02_raw_data", "covariates", name)
   if(file.exists(path))
     data <- openxlsx::read.xlsx(path) 
   else
