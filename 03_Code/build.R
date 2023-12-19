@@ -33,10 +33,10 @@ read_gradrate_tidy <- function(data_name){
   path <- here::here("02_raw_data", "outcome", name)
   if(file.exists(path))
     data <- openxlsx::read.xlsx(path) |>
-    dplyr::mutate_all(as.double)
+            dplyr::mutate_all(as.double)
   else
     data <- openxlsx::read.xlsx(name)|>
-    dplyr::mutate_all(as.double)
+            dplyr::mutate_all(as.double)
   return(data)
 }
 
@@ -79,7 +79,8 @@ year_semester_dummy_tidy <- tidyr::expand(semester_dummy_tidy, year) |>
 unitid_gradrate_ready <- tidyr::expand(gradrate_ready, unitid) |>
   as.data.frame()
 
-covariates_ready <- dplyr::mutate(covariates_tidy, dplyr::across(everything(), as.double, na.rm = TRUE)) |>
+covariates_ready <- covariates_tidy |>
+  dplyr::mutate(dplyr::across(everything(), as.double, na.rm = TRUE)) |>
   dplyr::filter(year %in% year_gradrate_ready$year & year %in% year_semester_dummy_tidy$year) |>
   dplyr::filter(unitid %in% unitid_gradrate_ready$unitid)
 
